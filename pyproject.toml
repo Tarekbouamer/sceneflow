@@ -1,0 +1,48 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+
+#  Project metadata
+
+[project]
+name = "sceneflow"
+version = "0.1.0"
+description = "Modular toolkit for scene parsing, object segmentation, in-painting and static-background extraction."
+authors = [{ name = "Tarek BOUAMER", email = "tarekbouamer1788@gmail.com" }]
+license = { text = "MIT" }
+readme = "README.md"
+requires-python = ">=3.8"
+
+
+#  Core runtime dependencies
+
+dependencies = [
+    "ultralytics>=8.0.0",
+    "opencv-python",
+    "numpy",
+    "pyyaml",
+    "rich",
+    "pycocotools",
+]
+
+
+#  Optional extras
+
+[project.optional-dependencies]
+sam = [
+    "segment-anything @ git+https://github.com/facebookresearch/segment-anything.git",
+]
+
+
+#  Console-scripts
+
+[project.scripts]
+sceneflow = "sceneflow.cli:cli"
+sceneflow-redact = "sceneflow.cli.redact:redact_cli"
+
+
+#  Package discovery
+
+[tool.setuptools.packages.find]
+include = ["sceneflow*"]
