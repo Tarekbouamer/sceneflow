@@ -5,7 +5,7 @@ import torch
 
 from sceneflow.core.camouflage import Camouflage
 from sceneflow.core.mask_generator import MaskGenerator, load_detector, load_segmentor
-from sceneflow.utils.draw import blend_detections, create_predictions, generate_static_scene_mask
+from sceneflow.utils.draw import blend_detections, generate_static_scene_mask
 from sceneflow.utils.io import (
     get_all_images,
     load_image,

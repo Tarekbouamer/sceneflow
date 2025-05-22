@@ -3,8 +3,6 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 
-#  Project metadata
-
 [project]
 name = "sceneflow"
 version = "0.1.0"
@@ -15,34 +13,27 @@ readme = "README.md"
 requires-python = ">=3.8"
 
 
-#  Core runtime dependencies
-
 dependencies = [
     "ultralytics>=8.0.0",
     "opencv-python",
-    "numpy",
+    "numpy==1.26.0",
     "pyyaml",
     "rich",
     "pycocotools",
+    "loguru",
 ]
 
 
-#  Optional extras
-
 [project.optional-dependencies]
-sam = [
+extra = [
     "segment-anything @ git+https://github.com/facebookresearch/segment-anything.git",
 ]
 
-
-#  Console-scripts
 
 [project.scripts]
 sceneflow = "sceneflow.cli:cli"
 sceneflow-redact = "sceneflow.cli.redact:redact_cli"
 
-
-#  Package discovery
 
 [tool.setuptools.packages.find]
 include = ["sceneflow*"]
