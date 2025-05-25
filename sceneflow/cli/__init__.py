@@ -9,5 +9,5 @@ def cli():
     pass
 
 
-## Add sub-commands below
+# Add sub-commands below
 cli.add_command(redact_cli, name="redact")

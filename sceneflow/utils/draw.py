@@ -4,6 +4,8 @@ import cv2
 import numpy as np
 from pycocotools import mask as mask_utils
 
+from sceneflow.runners._helpers import Detection
+
 
 def random_color(seed=None):
     if seed is not None:
@@ -16,7 +18,7 @@ def generate_static_scene_mask(image, detections):
     fg_mask = np.zeros((height, width), dtype=np.uint8)
 
     for det in detections:
-        rle = det.get("segmentation")
+        rle = det["segmentation"]
         if rle is not None:
             mask = mask_utils.decode(rle).astype(np.uint8)
             fg_mask = cv2.bitwise_or(fg_mask, mask)
@@ -26,13 +28,13 @@ def generate_static_scene_mask(image, detections):
     return static_scene_mask
 
 
-def blend_detections(image, detections, alpha=0.5):
+def blend_detections(image: np.ndarray, detections: list[Detection], alpha: float = 0.5) -> np.ndarray:
     overlay = image.copy()
 
     for i, det in enumerate(detections):
-        x0, y0, x1, y1 = det["bbox"]
+        x0, y0, x1, y1 = det.xyxy
         label = det["class_name"]
-        conf = det["confidence"]
+        score = det["score"]
         mask = det["segmentation"]
 
         # Get color
@@ -54,7 +56,7 @@ def blend_detections(image, detections, alpha=0.5):
         cv2.rectangle(overlay, (x0, y0), (x1, y1), color=color, thickness=2)
 
         # Add class label and confidence
-        text = f"{label} {conf:.2f}"
+        text = f"{label} {score:.2f}"
         cv2.putText(
             overlay,
             text,

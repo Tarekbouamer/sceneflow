@@ -1,144 +1,157 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Dict, List, Tuple, Union
+from typing import Dict, List, Sequence, Tuple
 
+import cv2
 import numpy as np
 import torch
+from loguru import logger
 from pycocotools import mask as mask_utils
-from segment_anything import SamAutomaticMaskGenerator, SamPredictor, sam_model_registry
-from ultralytics import RTDETR, YOLO, YOLOWorld
+from torchvision.ops import nms
 
-from sceneflow.utils.hub import download_model_weights_to_zoo
-
-
-def load_detector(model_name: str):
-    """Return an Ultralytics detector."""
-    name = Path(model_name).stem.lower()
-    model_path = download_model_weights_to_zoo(name) or model_name
-
-    if name.startswith("yolo"):
-        return YOLO(model_path if str(model_path).endswith(".pt") else str(model_path) + ".pt")
-    if name.startswith("rtdetr"):
-        return RTDETR(model_path)
-    if "yoloworld" in name or "world" in name:
-        return YOLOWorld(model_path)
-
-    raise ValueError(f"Unknown detector model '{model_name}'")
-
-
-def load_segmentor(model_name: str, device: str = "cuda:0") -> Tuple[SamPredictor, SamAutomaticMaskGenerator]:
-    """
-    Load a SAM segmentor.
-    """
-    ckpt_path = download_model_weights_to_zoo(Path(model_name).stem.lower()) or Path(model_name)
-    ckpt_path = Path(ckpt_path)
-    if not ckpt_path.exists():
-        raise FileNotFoundError(f"SAM checkpoint not found: {ckpt_path}")
-
-    variant = model_name.replace("sam_", "vit_")
-
-    if variant not in sam_model_registry:
-        raise ValueError(f"SAM variant '{variant}' not supported, available: {list(sam_model_registry.keys())}")
-
-    sam = sam_model_registry[variant](checkpoint=str(ckpt_path)).to(device)
-    return SamPredictor(sam), SamAutomaticMaskGenerator(sam)
+from sceneflow.runners._factory import (
+    load_detector,
+    load_ovd_detector,
+    load_segmentor,
+)
+from sceneflow.runners._helpers import Detection
 
 
 class MaskGenerator:
-    """Detector + SAM predictor wrapper."""
-
-    def __init__(self, detector, segmentor: SamPredictor, device: str = "cuda:0"):
-        self.detector = detector
+    def __init__(
+        self,
+        detectors: List,
+        ovd_detectors: List,
+        segmentor,
+        *,
+        device: str,
+    ) -> None:
+        self.detectors = detectors
+        self.ovd_detectors = ovd_detectors
         self.segmentor = segmentor
         self.device = device
+
+    @classmethod
+    def from_pretrained(
+        cls,
+        detectors: Sequence[str],
+        ovd_detectors: Sequence[str],
+        segmentor: str,
+        *,
+        device: str = "cuda:0",
+    ) -> "MaskGenerator":
+        """
+        Instantiate a MaskGenerator with specific detector and segmentor names.
+        Models are loaded through the centralized registry system.
+        """
+        #
+        detector_runners = [load_detector(name) for name in detectors]
+        logger.info(f"Loaded detectors: {', '.join([repr(r) for r in detector_runners])}")
+
+        ovd_runners = [load_ovd_detector(name) for name in ovd_detectors]
+        logger.info(f"Loaded OVD detectors: {', '.join([repr(r) for r in ovd_runners])}")
+
+        segmentor_runner = load_segmentor(segmentor)
+        logger.info(f"Loaded segmentor: {repr(segmentor_runner)}")
+
+        return cls(detector_runners, ovd_runners, segmentor_runner, device=device)
+
+    def _scale(self, detections: List[Detection], masks: np.ndarray, scale: Tuple[float, float]):
+        for det in detections:
+            det.bbox[0] *= scale[1]
+            det.bbox[1] *= scale[0]
+            det.bbox[2] *= scale[1]
+            det.bbox[3] *= scale[0]
+
+        resized_masks = np.array(
+            [
+                cv2.resize(
+                    mask,
+                    (int(mask.shape[1] * scale[1]), int(mask.shape[0] * scale[0])),
+                    interpolation=cv2.INTER_NEAREST,
+                )
+                for mask in masks
+            ]
+        )
+        return detections, resized_masks
+
+    def _nms(self, detections: List[Detection], nms_iou: float = 0.5) -> List[Detection]:
+        if not detections:
+            return []
+
+        boxes = torch.stack([d.bbox_tensor for d in detections])
+        scores = torch.tensor([d.score for d in detections])
+        ids = torch.tensor([d.class_id for d in detections])
+
+        keep = nms(
+            boxes,
+            scores,
+            iou_threshold=nms_iou,
+        )
+        return [detections[i] for i in keep]
 
     def _detect(
         self,
         image: np.ndarray,
-        det_thd: float = 0.25,
-        allowed_classes: Union[List[str], List[int], None] = None,
-    ) -> Tuple[torch.Tensor, List[Dict], List[str]]:
-        # Detector
-        results = self.detector.predict(source=image, conf=det_thd, device=self.device, verbose=False)
+        *,
+        allowed_classes: Sequence[str],
+        conf: float,
+        nms_iou: float = 0.5,
+    ) -> List[Detection]:
+        out: List[Detection] = []
 
-        if not results or not results[0].boxes:
-            return torch.empty((0, 4)), [], []
+        for det in self.detectors:
+            out.extend(det.run(image, conf=conf))
 
-        boxes = results[0].boxes.xyxy.cpu()
-        cls_ids = results[0].boxes.cls.int().cpu()
-        confs = results[0].boxes.conf.cpu()
-        names = getattr(self.detector.model, "names", {})
+        # Filter detections by allowed classes
+        if allowed_classes:
+            out = [d for d in out if d.class_name in allowed_classes]
 
-        kept = []
-        for box, cid, conf in zip(boxes, cls_ids, confs):
-            cname = names.get(int(cid), str(int(cid)))
-            if allowed_classes and cid.item() not in allowed_classes and cname not in allowed_classes:
-                continue
-            kept.append((box, int(cid), cname, float(conf)))
+        for ovd_det in self.ovd_detectors:
+            out.extend(ovd_det.run(image, texts=allowed_classes, conf=conf))
 
-        if not kept:
-            return torch.empty((0, 4)), [], []
+        return self._nms(out, nms_iou=nms_iou)
 
-        bboxes = torch.stack([k[0] for k in kept])
-        detections = [
-            {
-                "class_id": k[1],
-                "class_name": k[2],
-                "confidence": round(k[3], 4),
-                "bbox": list(map(int, k[0].tolist())),
-            }
-            for k in kept
-        ]
-        prompts = sorted({k[2] for k in kept})
-        return bboxes, detections, prompts
+    def _segment(self, image: np.ndarray, detections: List[Detection]) -> np.ndarray:
+        if not detections:
+            return np.array([])
+        return self.segmentor.run(image, detections=detections)
 
-    @staticmethod
-    def _embed_rle(detections: List[Dict], masks: np.ndarray) -> List[Dict]:
-        for d, m in zip(detections, masks):
-            rle = mask_utils.encode(np.asfortranarray(m.astype(np.uint8)))
+    def _to_rle(self, detections: List[Detection], masks: np.ndarray) -> Tuple[List[Detection], np.ndarray]:
+        if len(detections) == 0 or len(masks) == 0:
+            return detections, masks
+
+        for det, mask in zip(detections, masks):
+            det.mask = mask
+            rle = mask_utils.encode(np.asfortranarray(mask.astype(np.uint8)))
             rle["counts"] = rle["counts"].decode("utf-8")
-            d["segmentation"] = rle
-        return detections
+            det.segmentation = rle
 
-    def _segment(self, image: np.ndarray, det_boxes: torch.Tensor) -> np.ndarray:
-        """Segment the image using SAM."""
-        if det_boxes.numel() == 0:
-            return np.zeros((0, image.shape[0], image.shape[1]), dtype=np.uint8)
-
-        self.segmentor.set_image(image)
-        tb = self.segmentor.transform.apply_boxes_torch(det_boxes, image.shape[:2]).to(self.device)
-
-        # Generate masks
-        masks, _, _ = self.segmentor.predict_torch(
-            point_coords=None,
-            point_labels=None,
-            boxes=tb,
-            multimask_output=False,
-        )
-        return masks.squeeze(1).cpu().numpy().astype(np.uint8)
+        return detections, masks
 
     def generate(
         self,
         image: np.ndarray,
-        det_thd: float = 0.25,
-        allowed_classes: Union[List[str], List[int], None] = None,
-    ) -> Dict:
+        *,
+        conf: float = 0.25,
+        nms_iou: float = 0.5,
+        allowed_classes: Sequence[str] = None,
+        scale: Tuple[float, float] = (1.0, 1.0),
+    ) -> Tuple[List[Dict], np.ndarray, List[str]]:
+        # Allow classes
+        allowed_classes = list(set(allowed_classes)) if allowed_classes else None
+
         # Detect objects
-        boxes, detections, prompts = self._detect(image, det_thd, allowed_classes)
+        detections = self._detect(image, allowed_classes=allowed_classes, conf=conf, nms_iou=nms_iou)
 
-        if boxes.numel() == 0:
-            h, w = image.shape[:2]
-            return {
-                "detections": [],
-                "masks": np.zeros((0, h, w), dtype=np.uint8),
-                "prompts": [],
-            }
+        if not detections:
+            return [], np.array([]), []
 
-        # Segment
-        masks = self._segment(image, boxes)
+        masks = self._segment(image, detections)
+        detections, masks = self._scale(detections, masks, scale)
+        detections, masks = self._to_rle(detections, masks)
 
-        # Update detection
-        detections = self._embed_rle(detections, masks)
+        prompts = sorted({d.class_name for d in detections})
 
+        assert len(detections) == len(masks), "Number of detections and masks must match."
         return detections, masks, prompts

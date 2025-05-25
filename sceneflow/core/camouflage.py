@@ -6,6 +6,16 @@ from typing import Dict, List, Union
 import cv2
 import numpy as np
 
+AVAILABLE_CAMOUFLAGE_METHODS = {
+    "telea",
+    "ns",
+    "median",
+    "blur",
+    "mosaic",
+    "solid",
+    "noise",
+}
+
 
 def combine_masks(masks: List[np.ndarray]) -> np.ndarray:
     out_mask = np.zeros_like(masks[0], dtype=np.uint8)
@@ -23,7 +33,7 @@ class Camouflage:
         "median": {"kernel": 21},
         "blur": {"ksize": 21},
         "mosaic": {"block": 16},
-        "solid": {"value": (127, 127, 127)},  # grey
+        "solid": {"value": (127, 127, 127)}, 
         "noise": {},
     }
 
@@ -124,6 +134,9 @@ class Camouflage:
             mask_list = [masks[i] for i in range(masks.shape[0])]
         else:
             mask_list = [masks]
+
+        if len(mask_list) == 0:
+            raise ValueError("No masks provided. Returning original image.")
 
         mask_list = [self._norm_mask(m) for m in mask_list]
 
