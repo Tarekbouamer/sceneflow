@@ -44,3 +44,8 @@ def yolov8n():
 @DETECTORS.register("yolov8x")
 def yolov8x():
     return YoloRunner("yolov8x")
+
+
+@DETECTORS.register("yolo11x")
+def yolo11x():
+    return YoloRunner("yolo11x")

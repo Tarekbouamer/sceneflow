@@ -45,9 +45,10 @@ class Detection:
 
     bbox: np.ndarray
     score: float
-    class_id: int
-    class_name: str
+    class_id: Optional[int] = None
+    class_name: Optional[str] = None
     segmentation: Dict[str, Any] = None
+    text: Optional[str] = None
 
     def as_dict(self) -> Dict[str, Any]:
         return {
@@ -56,6 +57,7 @@ class Detection:
             "class_id": self.class_id,
             "class_name": self.class_name,
             "segmentation": self.segmentation,
+            "text": self.text,
         }
 
     def to_json(self) -> str:
@@ -89,10 +91,12 @@ class Detection:
 
     @classmethod
     def from_dict(cls, d: Dict[str, Any]) -> "Detection":
+        """Create a Detection instance from a dictionary."""
         return cls(
             bbox=np.array(d["bbox"], dtype=np.float32),
-            score=d["score"],
-            class_id=d["class_id"],
-            class_name=d["class_name"],
+            score=float(d["score"]),
+            class_id=int(d["class_id"]),
+            class_name=str(d["class_name"]),
             segmentation=d.get("segmentation"),
+            text=d.get("text"),
         )

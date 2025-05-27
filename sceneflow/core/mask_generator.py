@@ -42,7 +42,6 @@ class MaskGenerator:
     ) -> "MaskGenerator":
         """
         Instantiate a MaskGenerator with specific detector and segmentor names.
-        Models are loaded through the centralized registry system.
         """
         #
         detector_runners = [load_detector(name) for name in detectors]
@@ -56,18 +55,27 @@ class MaskGenerator:
 
         return cls(detector_runners, ovd_runners, segmentor_runner, device=device)
 
-    def _scale(self, detections: List[Detection], masks: np.ndarray, scale: Tuple[float, float]):
+    def _scale(
+        self,
+        detections: List[Detection],
+        masks: np.ndarray,
+        scale: Tuple[float, float],
+        original_size: Tuple[int, int],
+    ) -> Tuple[List[Detection], np.ndarray]:
         for det in detections:
             det.bbox[0] *= scale[1]
             det.bbox[1] *= scale[0]
             det.bbox[2] *= scale[1]
             det.bbox[3] *= scale[0]
 
+        #
+        H_tgt, W_tgt = original_size
+
         resized_masks = np.array(
             [
                 cv2.resize(
                     mask,
-                    (int(mask.shape[1] * scale[1]), int(mask.shape[0] * scale[0])),
+                    (W_tgt, H_tgt),
                     interpolation=cv2.INTER_NEAREST,
                 )
                 for mask in masks
@@ -81,7 +89,6 @@ class MaskGenerator:
 
         boxes = torch.stack([d.bbox_tensor for d in detections])
         scores = torch.tensor([d.score for d in detections])
-        ids = torch.tensor([d.class_id for d in detections])
 
         keep = nms(
             boxes,
@@ -137,6 +144,7 @@ class MaskGenerator:
         nms_iou: float = 0.5,
         allowed_classes: Sequence[str] = None,
         scale: Tuple[float, float] = (1.0, 1.0),
+        original_size: Tuple[int, int] = None,
     ) -> Tuple[List[Dict], np.ndarray, List[str]]:
         # Allow classes
         allowed_classes = list(set(allowed_classes)) if allowed_classes else None
@@ -148,7 +156,7 @@ class MaskGenerator:
             return [], np.array([]), []
 
         masks = self._segment(image, detections)
-        detections, masks = self._scale(detections, masks, scale)
+        detections, masks = self._scale(detections, masks, scale, original_size)
         detections, masks = self._to_rle(detections, masks)
 
         prompts = sorted({d.class_name for d in detections})

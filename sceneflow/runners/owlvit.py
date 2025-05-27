@@ -15,7 +15,7 @@ if HF_TOKEN is None:
 
 class OwlViTRunner(ModelRunner):
     def _load_model(self):
-        model_id = "google/" + self.model_name  
+        model_id = "google/" + self.model_name
         self._processor = OwlViTProcessor.from_pretrained(model_id, token=HF_TOKEN)
         self._model = OwlViTForObjectDetection.from_pretrained(model_id, token=HF_TOKEN).to(self.device)
 

@@ -1,4 +1,5 @@
 import random
+from typing import List
 
 import cv2
 import numpy as np
@@ -28,7 +29,7 @@ def generate_static_scene_mask(image, detections):
     return static_scene_mask
 
 
-def blend_detections(image: np.ndarray, detections: list[Detection], alpha: float = 0.5) -> np.ndarray:
+def blend_detections(image: np.ndarray, detections: List[Detection], alpha: float = 1.0) -> np.ndarray:
     overlay = image.copy()
 
     for i, det in enumerate(detections):
@@ -56,14 +57,14 @@ def blend_detections(image: np.ndarray, detections: list[Detection], alpha: floa
         cv2.rectangle(overlay, (x0, y0), (x1, y1), color=color, thickness=2)
 
         # Add class label and confidence
-        text = f"{label} {score:.2f}"
+        text = f"{label} {score:.2f}" if label else f"{score:.2f}"
         cv2.putText(
             overlay,
             text,
             (x0, max(y0 - 5, 10)),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.5,
-            (255, 255, 255),
+            cv2.FONT_HERSHEY_SCRIPT_SIMPLEX,
+            0.30,
+            (128, 128, 128),  # Dark gray for text
             1,
             cv2.LINE_AA,
         )

@@ -33,7 +33,7 @@ class Camouflage:
         "median": {"kernel": 21},
         "blur": {"ksize": 21},
         "mosaic": {"block": 16},
-        "solid": {"value": (127, 127, 127)}, 
+        "solid": {"value": (127, 127, 127)},
         "noise": {},
     }
 

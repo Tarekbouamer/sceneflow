@@ -1,3 +1,4 @@
+from rich.console import Console
 from rich.progress import (
     BarColumn,
     Progress,
@@ -5,6 +6,9 @@ from rich.progress import (
     TextColumn,
     TimeElapsedColumn,
 )
+
+# Shared console for progress bars
+console = Console()
 
 
 def get_progress():
@@ -14,4 +18,6 @@ def get_progress():
         BarColumn(),
         TextColumn("{task.completed}/{task.total}"),
         TimeElapsedColumn(),
+        console=console,  # Use shared console no conflict with other progress bars
+        transient=True,
     )

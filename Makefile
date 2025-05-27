@@ -8,14 +8,16 @@ DEMOS_DIR := ./demos
 
 .PHONY: install dev clean lint format check
 
+NUM_JOBS := 8
+
 install:
-	$(PIP) install .
+	MAX_JOBS=$(NUM_JOBS) $(PIP) install .
 
 dev:
-	$(PIP) install -e .[dev,docs,test,extra]
+	MAX_JOBS=$(NUM_JOBS) $(PIP) install -e .[dev,docs,test,extra]
 
 torch:
-	$(PIP) install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu118
+	$(PIP) install torch torchvision --index-url https://download.pytorch.org/whl/cu118 --upgrade
 
 
 requirements:

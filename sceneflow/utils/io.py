@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Tuple
 
 import cv2
 import numpy as np
@@ -17,7 +17,7 @@ def get_all_images(input_dir: Path, exts=(".jpg", ".jpeg", ".png")):
     return images
 
 
-def load_image(path: Path, resize: Optional[tuple[int, int]] = None) -> tuple[np.ndarray, np.ndarray]:
+def load_image(path: Path, resize: Optional[Tuple[int, int]] = None) -> Tuple[np.ndarray, np.ndarray]:
     """Load an image using OpenCV and return it."""
 
     # Read image
@@ -31,7 +31,7 @@ def load_image(path: Path, resize: Optional[tuple[int, int]] = None) -> tuple[np
     original_size = img.shape[:2]
 
     if resize is None:
-        return img, original_size, np.array([1.0, 1.0], dtype=np.float32)
+        return img, img_bgr, original_size, np.array([1.0, 1.0], dtype=np.float32)
 
     # Resize image
     w_tgt, h_tgt = resize

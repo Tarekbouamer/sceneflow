@@ -2,7 +2,7 @@ import json
 import time
 from collections import Counter
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 import torch
 
@@ -29,7 +29,7 @@ def redact(
     det_thd: float,
     allowed_classes: Optional[str],
     camouflage_method: str,
-    resize: Optional[tuple[int, int]] = None,
+    resize: Optional[Tuple[int, int]] = None,
 ):
     # Paths
     input_dir = Path(input_dir)
@@ -50,6 +50,11 @@ def redact(
     allow: List[str | int] | None = None
     if allowed_classes:
         allow = [c.strip() for c in allowed_classes.split(",") if c.strip()]
+
+    logger.info(f"Allowed classes: {allow}")
+    logger.info(f"Resize images to: {resize}")
+    logger.info(f"NMS IoU threshold: {nms_iou}")
+    logger.info(f"Detection threshold: {det_thd}")
 
     images_paths = get_all_images(input_dir)
     if len(images_paths) == 0:
@@ -77,7 +82,7 @@ def redact(
 
             # Generate masks
             detections, masks, _ = mask_gen.generate(
-                img, conf=det_thd, allowed_classes=allow, scale=scale, nms_iou=nms_iou
+                img, conf=det_thd, allowed_classes=allow, scale=scale, original_size=original_size, nms_iou=nms_iou
             )
 
             # stats update
