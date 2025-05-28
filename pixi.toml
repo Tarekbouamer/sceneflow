@@ -21,12 +21,13 @@ make-third_party-dir = { cmd = "ls third_party || mkdir third_party" }
 clone-mmocr = { cmd = "ls mmocr || git clone https://github.com/open-mmlab/mmocr.git", cwd = "third_party", depends-on = [
     "make-third_party-dir",
 ] }
-mmocr-install = { cmd = "python -c 'import mmocr' || python -m pip install -e . --no-deps", cwd = "third_party/mmocr", depends-on = [
+mmocr-install = { cmd = " pip install -r requirements.txt && python -m pip install -e . --no-deps", cwd = "third_party/mmocr", depends-on = [
     "clone-mmocr",
 ], outputs = [
     "third_party/mmocr/mmocr.egg-info/PKG-INFO",
 ] }
-mmcv-install = { cmd = "pip install mmcv==2.1.0 -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.1/index.html", depends-on = [
-    "mmocr-install",
+mmcv-install = { cmd = "pip install mmcv==2.1.0 -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.1/index.html" }
+post-install = { cmd = "pwd", depends-on = ["mmcv-install", "mmocr-install"] }
+dev = { cmd = "pip install -e '.[extra]'", cwd = ".", depends-on = [
+    "post-install",
 ] }
-post-install = { cmd = "pwd", depends-on = ["mmcv-install"] }
