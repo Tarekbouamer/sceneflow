@@ -13,11 +13,13 @@ cuda = { version = "*", channel = "nvidia/label/cuda-11.8.0" }
 pytorch-cuda = { version = "11.8.*", channel = "pytorch" }
 pytorch = { version = "==2.1.2", channel = "pytorch" }
 torchvision = { version = "==0.16.2", channel = "pytorch" }
-numpy = ">=1.24,<2.0"
+numpy = "==1.22"
 
 
 [tasks]
 make-third_party-dir = { cmd = "ls third_party || mkdir third_party" }
+
+# MM
 clone-mmocr = { cmd = "ls mmocr || git clone https://github.com/open-mmlab/mmocr.git", cwd = "third_party", depends-on = [
     "make-third_party-dir",
 ] }
@@ -27,7 +29,22 @@ mmocr-install = { cmd = " pip install -r requirements.txt && python -m pip insta
     "third_party/mmocr/mmocr.egg-info/PKG-INFO",
 ] }
 mmcv-install = { cmd = "pip install mmcv==2.1.0 -f https://download.openmmlab.com/mmcv/dist/cu118/torch2.1/index.html" }
-post-install = { cmd = "pwd", depends-on = ["mmcv-install", "mmocr-install"] }
+
+## Lama
+clone-lama = { cmd = "lama || git clone https://github.com/advimman/lama.git", cwd = "third_party", depends-on = [
+    "make-third_party-dir",
+] }
+
+# TODO: Should we install lama as a dependency?
+# lama-install = { cmd = "pip install -r requirements.txt && python -m pip install -e . --no-deps", cwd = "third_party/lama", depends-on = [
+#     "clone-lama",
+# ], outputs = [
+#     "third_party/lama/lama.egg-info/PKG-INFO",
+# ] }
+
+post-install = { cmd = "pwd", depends-on = ["mmcv-install", "mmocr-install", "clone-lama"] }
+
+
 dev = { cmd = "pip install -e '.[extra]'", cwd = ".", depends-on = [
     "post-install",
 ] }

@@ -33,5 +33,5 @@ class TrOCRRunner(ModelRunner):
 
 
 @TEXT_DETECTORS.register("trocr_handwritten")
-def trocr_handwritten():
-    return TrOCRRunner("microsoft/trocr-base-handwritten")
+def trocr_handwritten(name: str = "microsoft/trocr-base-handwritten", device: str = "cpu") -> TrOCRRunner:
+    return TrOCRRunner(name, device=device)

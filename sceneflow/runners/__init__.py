@@ -1,3 +1,4 @@
+from .lama import big_lama  # noqa: F401
 from .mmocr import mmocr_dbnet_abinet, mmocr_dbnet_crnn, mmocr_drrg_abinet, mmocr_fcenet_crnn  # noqa: F401
 from .owlvit import owlvit_base, owlvit_large  # noqa: F401
 from .rtdetr import rtdetr_l, rtdetr_xl  # noqa: F401
@@ -13,7 +14,9 @@ from .tesseract import (  # noqa: F401
     tesseract_single_line,
     tesseract_single_word,
     tesseract_sparse,
-)  # noqa: F401
+)
+
+# noqa: F401
 from .trocr import trocr_handwritten  # noqa: F401
 from .yolo import yolov8n, yolov8x  # noqa: F401
 from .yolo_world import yolov8x_worldv2  # noqa: F401

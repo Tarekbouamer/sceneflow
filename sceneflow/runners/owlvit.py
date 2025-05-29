@@ -15,9 +15,8 @@ if HF_TOKEN is None:
 
 class OwlViTRunner(ModelRunner):
     def _load_model(self):
-        model_id = "google/" + self.model_name
-        self._processor = OwlViTProcessor.from_pretrained(model_id, token=HF_TOKEN)
-        self._model = OwlViTForObjectDetection.from_pretrained(model_id, token=HF_TOKEN).to(self.device)
+        self._processor = OwlViTProcessor.from_pretrained(self.model_name, token=HF_TOKEN)
+        self._model = OwlViTForObjectDetection.from_pretrained(self.model_name, token=HF_TOKEN).to(self.device)
 
     def run(self, image: np.ndarray, texts: Sequence[str], conf: float = 0.25, **kwargs) -> List[Detection]:
         processor = self._processor
@@ -42,10 +41,10 @@ class OwlViTRunner(ModelRunner):
 
 
 @OVD_DETECTORS.register("owlvit_base")
-def owlvit_base():
-    return OwlViTRunner("owlvit-base-patch32")
+def owlvit_base(name: str = "google/owlvit-base-patch32", device: str = "cpu") -> OwlViTRunner:
+    return OwlViTRunner(name, device=device)
 
 
 @OVD_DETECTORS.register("owlvit_large")
-def owlvit_large():
-    return OwlViTRunner("owlvit-large-patch14")
+def owlvit_large(name: str = "google/owlvit-large-patch14", device: str = "cpu") -> OwlViTRunner:
+    return OwlViTRunner(name, device=device)

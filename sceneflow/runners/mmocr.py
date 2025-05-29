@@ -23,6 +23,7 @@ class MMOCRRunner(ModelRunner):
             rec=self.rec,
             device=self.device,
         )
+
     @suppress_stdout_stderr()
     def run(self, image: np.ndarray, conf: float = 0.5, **kwargs) -> List[Detection]:
         results = self._model(image, show=False)

@@ -13,9 +13,9 @@ class OCRProcessor:
         self.device = device
 
     @classmethod
-    def from_pretrained(cls, detectors: Sequence[str], *, device: str = "cuda") -> "OCRProcessor":
+    def from_pretrained(cls, detectors: Sequence[str], *, device: str = "cpu") -> "OCRProcessor":
         """Instantiate an OCRRunner with a list of detector names."""
-        runners = [load_text_detector(name) for name in detectors]
+        runners = [load_text_detector(name, device=device) for name in detectors]
         logger.info(f"Loaded OCR detectors: {', '.join([repr(r) for r in runners])}")
         return cls(runners, device=device)
 

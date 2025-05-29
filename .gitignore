@@ -11,7 +11,6 @@ __pycache__/
 images/
 logs/
 zoo/
-results/
 .Python
 build/
 develop-eggs/

@@ -38,19 +38,19 @@ class MaskGenerator:
         ovd_detectors: Sequence[str],
         segmentor: str,
         *,
-        device: str = "cuda:0",
+        device: str = "cpu",
     ) -> "MaskGenerator":
         """
         Instantiate a MaskGenerator with specific detector and segmentor names.
         """
         #
-        detector_runners = [load_detector(name) for name in detectors]
+        detector_runners = [load_detector(name, device=device) for name in detectors]
         logger.info(f"Loaded detectors: {', '.join([repr(r) for r in detector_runners])}")
 
-        ovd_runners = [load_ovd_detector(name) for name in ovd_detectors]
+        ovd_runners = [load_ovd_detector(name, device=device) for name in ovd_detectors]
         logger.info(f"Loaded OVD detectors: {', '.join([repr(r) for r in ovd_runners])}")
 
-        segmentor_runner = load_segmentor(segmentor)
+        segmentor_runner = load_segmentor(segmentor, device=device)
         logger.info(f"Loaded segmentor: {repr(segmentor_runner)}")
 
         return cls(detector_runners, ovd_runners, segmentor_runner, device=device)
@@ -142,21 +142,23 @@ class MaskGenerator:
         *,
         conf: float = 0.25,
         nms_iou: float = 0.5,
-        allowed_classes: Sequence[str] = None,
+        prompt: Sequence[str] = None,
         scale: Tuple[float, float] = (1.0, 1.0),
         original_size: Tuple[int, int] = None,
     ) -> Tuple[List[Dict], np.ndarray, List[str]]:
         # Allow classes
-        allowed_classes = list(set(allowed_classes)) if allowed_classes else None
+        prompt = list(set(prompt)) if prompt else None
 
         # Detect objects
-        detections = self._detect(image, allowed_classes=allowed_classes, conf=conf, nms_iou=nms_iou)
+        detections = self._detect(image, allowed_classes=prompt, conf=conf, nms_iou=nms_iou)
 
         if not detections:
             return [], np.array([]), []
 
         masks = self._segment(image, detections)
-        detections, masks = self._scale(detections, masks, scale, original_size)
+
+        if scale != (1.0, 1.0) and original_size is not None:
+            detections, masks = self._scale(detections, masks, scale, original_size)
         detections, masks = self._to_rle(detections, masks)
 
         prompts = sorted({d.class_name for d in detections})

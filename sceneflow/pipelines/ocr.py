@@ -30,7 +30,7 @@ def detect_text_boxes(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Device
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu" if torch.cuda.is_available() else "cpu"
     logger.info(f"Running on device: {device}")
 
     # Load OCRProcessor

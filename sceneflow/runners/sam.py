@@ -42,20 +42,19 @@ class SAMRunner(ModelRunner):
             boxes=transformed_boxes,
             multimask_output=False,
         )
-
         return masks.squeeze(1).cpu().numpy().astype(np.uint8)
 
 
 @SEGMENTORS.register("sam_b")
-def sam_b():
-    return SAMRunner("sam_b")
+def sam_b(name: str = "sam_b", device: str = "cpu") -> SAMRunner:
+    return SAMRunner(name, device=device)
 
 
 @SEGMENTORS.register("sam_l")
-def sam_l():
-    return SAMRunner("sam_l")
+def sam_l(name: str = "sam_l", device: str = "cpu") -> SAMRunner:
+    return SAMRunner(name, device=device)
 
 
 @SEGMENTORS.register("sam_h")
-def sam_h():
-    return SAMRunner("sam_h")
+def sam_h(name: str = "sam_h", device: str = "cpu") -> SAMRunner:
+    return SAMRunner(name, device=device)

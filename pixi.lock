@@ -117,7 +117,7 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/nettle-3.6-he412f7d_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/noarch/networkx-3.1-pyhd8ed1ab_0.conda
       - conda: https://conda.anaconda.org/nvidia/label/cuda-11.8.0/linux-64/nsight-compute-2022.3.0.22-0.tar.bz2
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/numpy-1.24.4-py38h59b608b_0.conda
+      - conda: https://conda.anaconda.org/conda-forge/linux-64/numpy-1.22.0-py38h6ae9a64_1.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/openh264-2.1.1-h780b84a_0.tar.bz2
       - conda: https://conda.anaconda.org/conda-forge/linux-64/openjpeg-2.5.0-hfec8fc6_2.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/openssl-1.1.1w-hd590300_0.conda
@@ -1172,25 +1172,23 @@ packages:
   md5: a438d9120c100bcac9eb166cebdd3023
   size: 639598244
   timestamp: 1661399409484
-- conda: https://conda.anaconda.org/conda-forge/linux-64/numpy-1.24.4-py38h59b608b_0.conda
-  sha256: 6b1fac85c497432fa5ebdd0edaa2197cc89a9fd656b2ec696c9e50e7da23663e
-  md5: 8c3e050afeeb2b32575bdb8955cc67b2
+- conda: https://conda.anaconda.org/conda-forge/linux-64/numpy-1.22.0-py38h6ae9a64_1.tar.bz2
+  sha256: 99238f98aaa7f89260efd7d079bb6d83aad52dc507c0901f30826804dd1a6fd8
+  md5: e06061f06c024fab614ace4bbb3e34df
   depends:
-  - libblas >=3.9.0,<4.0a0
-  - libcblas >=3.9.0,<4.0a0
-  - libgcc-ng >=12
-  - liblapack >=3.9.0,<4.0a0
-  - libstdcxx-ng >=12
+  - libblas >=3.8.0,<4.0a0
+  - libcblas >=3.8.0,<4.0a0
+  - libgcc-ng >=9.4.0
+  - liblapack >=3.8.0,<4.0a0
+  - libstdcxx-ng >=9.4.0
   - python >=3.8,<3.9.0a0
   - python_abi 3.8.* *_cp38
   constrains:
   - numpy-base <0a0
   license: BSD-3-Clause
   license_family: BSD
-  purls:
-  - pkg:pypi/numpy?source=hash-mapping
-  size: 6681715
-  timestamp: 1687808678590
+  size: 8456670
+  timestamp: 1642632723053
 - conda: https://conda.anaconda.org/conda-forge/linux-64/openh264-2.1.1-h780b84a_0.tar.bz2
   sha256: 2ce3df1edb23541595443c7697e5568ae6426fa4d365dede45b16b0310bd6a06
   md5: 034a6f90f1bbc7ba11d04b84ec9d74c8

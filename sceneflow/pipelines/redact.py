@@ -37,7 +37,7 @@ def redact(
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Device
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = "cpu" if torch.cuda.is_available() else "cpu"
     logger.info(f"Running on device: {device}")
 
     mask_gen = MaskGenerator.from_pretrained(detectors, ovd_detectors, segmentor, device=device)

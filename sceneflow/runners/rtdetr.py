@@ -35,10 +35,10 @@ class RTDETRRunner(ModelRunner):
 
 
 @DETECTORS.register("rtdetr_l")
-def rtdetr_l():
-    return RTDETRRunner("rtdetr_l")
+def rtdetr_l(name: str = "rtdetr_l", device: str = "cpu") -> RTDETRRunner:
+    return RTDETRRunner(name, device=device)
 
 
 @DETECTORS.register("rtdetr_xl")
-def rtdetr_xl():
-    return RTDETRRunner("rtdetr_xl")
+def rtdetr_xl(name: str = "rtdetr_l", device: str = "cpu") -> RTDETRRunner:
+    return RTDETRRunner(name, device=device)

@@ -9,7 +9,7 @@ import torch
 class ModelRunner:
     """Generic base class for model runners."""
 
-    def __init__(self, model_name: Optional[str] = None, device: str = "cuda:0"):
+    def __init__(self, model_name: Optional[str] = None, device: str = "cpu"):
         self.model_name = model_name or self.__class__.__name__
         self.device = device
         self._model = None
@@ -19,6 +19,7 @@ class ModelRunner:
         """Load the model instance. Must be implemented by subclasses."""
         raise NotImplementedError("Inherited classes must implement `_load_model()`")
 
+    @torch.no_grad()
     def run(self, *args, **kwargs):
         """Execute the model's core function (e.g., predict, extract)."""
         raise NotImplementedError("Inherited classes must implement `run()`")

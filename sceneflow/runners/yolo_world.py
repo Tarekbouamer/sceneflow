@@ -10,7 +10,7 @@ from ._helpers import Detection, ModelRunner
 
 
 class YoloWorldRunner(ModelRunner):
-    def __init__(self, model_name: str, device: str = "cuda:0"):
+    def __init__(self, model_name: str, device: str = "cpu"):
         self._classes = None
         super().__init__(model_name=model_name, device=device)
 
@@ -38,5 +38,5 @@ class YoloWorldRunner(ModelRunner):
 
 
 @OVD_DETECTORS.register("yolov8x-worldv2")
-def yolov8x_worldv2():
-    return YoloWorldRunner("yolov8x-worldv2")
+def yolov8x_worldv2(name: str = "yolov8x-worldv2", device: str = "cpu") -> YoloWorldRunner:
+    return YoloWorldRunner(name, device=device)

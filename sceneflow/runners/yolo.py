@@ -37,15 +37,15 @@ class YoloRunner(ModelRunner):
 
 
 @DETECTORS.register("yolov8n")
-def yolov8n():
-    return YoloRunner("yolov8n")
+def yolov8n(name: str = "yolov8n", device: str = "cpu") -> YoloRunner:
+    return YoloRunner(name, device=device)
 
 
 @DETECTORS.register("yolov8x")
-def yolov8x():
-    return YoloRunner("yolov8x")
+def yolov8x(name: str = "yolov8x", device: str = "cpu") -> YoloRunner:
+    return YoloRunner(name, device=device)
 
 
 @DETECTORS.register("yolo11x")
-def yolo11x():
-    return YoloRunner("yolo11x")
+def yolo11x(name: str = "yolo11x", device: str = "cpu") -> YoloRunner:
+    return YoloRunner(name, device=device)

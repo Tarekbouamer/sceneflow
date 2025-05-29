@@ -26,13 +26,10 @@ class ModelRegistry:
 
         return decorator
 
-    def get(self, name: str) -> Callable:
-        """
-        Retrieve the registered model runner.
-        """
+    def get(self, name: str, **kwargs) -> Callable:
         if name not in self._registry:
             raise ValueError(f"'{name}' not found in registry '{self.name}'")
-        return self._registry[name]
+        return self._registry[name](**kwargs)
 
     def has(self, name: str) -> bool:
         return name in self._registry
