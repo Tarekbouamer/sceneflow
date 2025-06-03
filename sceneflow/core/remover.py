@@ -24,5 +24,5 @@ class Remover:
             assert mask.ndim == 2, f"Each mask must be a 2D array, got shape {mask.shape}"
             image = self.inpainter.run(image, mask)
 
-        # Convert BGR 
+        # Convert BGR
         return image[..., ::-1]

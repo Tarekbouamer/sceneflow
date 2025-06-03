@@ -26,6 +26,9 @@ dependencies = [
     "albumentations==0.5.2",
     "numpy==1.23",
     "gdown",
+    "streamlit",
+    "pascal_voc_writer",
+    "streamlit-autorefresh",
 ]
 
 
